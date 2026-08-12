@@ -71,18 +71,13 @@ jobs:
         working-directory: /tmp/build
         run: ./gradlew assembleFossRelease --stacktrace
 
-      - name: Publish release to fork
+      - name: Upload APK artifact (no public release)
         if: steps.marker.outputs.last != steps.upstream.outputs.tag
-        env:
-          TAG: ${{ steps.upstream.outputs.tag }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          APK=$(ls /tmp/build/app/build/outputs/apk/foss/release/*.apk | head -n1)
-          gh release create "$TAG" \
-            --repo kancrutt/sdmaid-se \
-            --title "SD Maid SE FOSS (unlock fix) $TAG" \
-            --notes "Automated FOSS build of upstream $TAG with the GitHub-Sponsors unlock fix applied (UpgradeViewModel timestamp restore + 1s delay)." \
-            "$APK"
+        uses: actions/upload-artifact@v4
+        with:
+          name: SDMaidSE-FOSS-${{ steps.upstream.outputs.tag }}
+          path: /tmp/build/app/build/outputs/apk/foss/release/*.apk
+          retention-days: 90
 
       - name: Update last_built marker
         if: steps.marker.outputs.last != steps.upstream.outputs.tag
